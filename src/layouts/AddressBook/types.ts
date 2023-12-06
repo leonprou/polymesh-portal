@@ -1,5 +1,10 @@
 import { Instruction } from '@polymeshassociation/polymesh-sdk/types';
 
+export enum EAddressBookEntityTypes {
+  DID = 'DID',
+  KEY = 'key',
+}
+
 export enum EInstructionTypes {
   PENDING = 'pending',
   AFFIRMED = 'affirmed',

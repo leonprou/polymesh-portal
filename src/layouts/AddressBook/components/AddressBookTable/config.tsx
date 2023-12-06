@@ -6,6 +6,7 @@ import {
 } from './constants';
 import {
   AddressCellWrapper,
+  NameCellWrapper
 } from './styles';
 import { CopyToClipboard, Icon } from '~/components';
 import { formatDid } from '~/helpers/formatters';
@@ -29,6 +30,13 @@ export const columns = ADDRESS_BOOK_COLUMNS.map(
           );
         }
 
+        if (key === 'name') {
+          return (
+            <NameCellWrapper>
+              {data as string}
+            </NameCellWrapper>
+          );
+        }
         return data;
       },
     });

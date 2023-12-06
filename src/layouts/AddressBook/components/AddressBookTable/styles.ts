@@ -56,3 +56,9 @@ export const AddressCellWrapper = styled.span`
     color: ${({ theme }) => theme.colors.textSecondary};
   }
 `;
+
+export const NameCellWrapper = styled.span`
+  display: flex;
+  align-items: center;
+  max-width: 1px;
+`;

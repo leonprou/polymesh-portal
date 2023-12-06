@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ESortOptions } from './types';
 import { AddressBookTable } from './components/AddressBookTable';
+import { AddressBookHeader } from './components/AddressBookHeader';
+import { ESortOptions } from './types';
 
 const AddressBook = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const type = searchParams.get('type');
+  const [sortBy, setSortBy] = useState<ESortOptions>(ESortOptions.NEWEST);
 
   useEffect(() => {
     if (type) return;
@@ -15,6 +17,7 @@ const AddressBook = () => {
 
   return (
     <>
+      <AddressBookHeader sortBy={sortBy} setSortBy={setSortBy} />
       <AddressBookTable />
     </>
   );
