@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AddressBookTable } from './components/AddressBookTable';
 import { AddressBookHeader } from './components/AddressBookHeader';
-import { ESortOptions } from './types';
+import { ESortOptions, EAddressBookEntityTypes } from './types';
 
 const AddressBook = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -12,7 +12,7 @@ const AddressBook = () => {
   useEffect(() => {
     if (type) return;
 
-    setSearchParams({ type: 'pending' });
+    setSearchParams({ type: EAddressBookEntityTypes.DID });
   }, [type, setSearchParams]);
 
   return (
