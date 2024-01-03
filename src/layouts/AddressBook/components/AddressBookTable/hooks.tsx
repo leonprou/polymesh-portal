@@ -43,7 +43,7 @@ export const useAddressBookTable = () => {
   }, [identity]);
 
   useEffect(() => {
-    if (!identity  /* || !gqlClient */) {
+    if (!identity) {
       setTableData([]);
       identityRef.current = undefined;
       return;
@@ -53,22 +53,6 @@ export const useAddressBookTable = () => {
 
     (async () => {
       try {
-        // const { data } = await gqlClient.query<IDistributionsQueryResponse>({
-        //   query: historicalDistributionsQuery({
-        //     did: identity.did,
-        //     offset: pageIndex * pageSize,
-        //     pageSize,
-        //   }),
-        // });
-        // const parsedData = parseHistoricalDistributions(
-        //   data.distributionPayments.nodes,
-        // );
-
-        // const parsedData = [
-        //   {name: 'leon', address: '5DPyj8QYwYv6cxZEvVk9XXuvNMBoSkH4o2xMSg97FjAtxFy6', did: '0x3c47d8ebf615e0c1bf915fc11c40e1995bfdf66b3e3b027d9b3c83cb38dc9f44'},
-        //   {name: 'FOB', address: '5GGt93unRxqBNNbpc8LkV2ZZv9oFWBfQFhfyyRa5A4NAbwym', did: '0x0eeedd3242dcbfaa6d5c76f84527fde116355b3f3b46185c423f2de26eb6871a'}
-        // ]
-
         setTableData(didEntities);
         setTotalItems(1);
         setTotalPages(
@@ -81,7 +65,7 @@ export const useAddressBookTable = () => {
         setTableLoading(false);
       }
     })();
-  }, [identity, pageIndex, pageSize]);
+  }, [didEntities, pageIndex, pageSize]);
 
   const pagination = useMemo(
     () => ({

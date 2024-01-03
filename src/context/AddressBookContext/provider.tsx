@@ -13,14 +13,13 @@ const AddressBookProvider = ({ children }: IProviderProps) => {
     'didEntities',
     [],
   );
-  console.log('p', didEntities);
+  
   const addDidEntity = useCallback(
     (entity: IAddressBookEntity) => {
       setDidEntities((prev) => [...prev, entity]);
     },
     [setDidEntities],
   );
-  
 
   const contextValue = useMemo(
     () => ({

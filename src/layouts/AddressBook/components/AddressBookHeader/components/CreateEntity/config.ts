@@ -5,20 +5,23 @@ import { ValidationMode } from 'react-hook-form';
 import * as yup from 'yup';
 
 export interface IFieldValues {
-  description: string;
-  type: EAddressBookEntityTypes;
+  name: string
+  address: string;
+  did: string;
 }
 
 export const FORM_CONFIG = {
   mode: 'onTouched' as keyof ValidationMode,
   defaultValues: {
-    description: '',
-    type: '' as EAddressBookEntityTypes,
+    name: 'kk',
+    address: '5DPyj8QYwYv6cxZEvVk9XXuvNMBoSkH4o2xMSg97FjAtxFy6',
+    did: '0x3c47d8ebf615e0c1bf915fc11c40e1995bfdf66b3e3b027d9b3c83cb38dc9f44'
   },
   resolver: yupResolver(
     yup.object().shape({
-      description: yup.string().required('Description is required'),
-      type: yup.string().required('Type is required'),
+      name: yup.string().required('Tag name is required'),
+      did: yup.string().required('DID is required'),
+      address: yup.string().required('Address is required'),
     }),
   ),
 };

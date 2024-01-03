@@ -15,6 +15,7 @@ import { notifyError } from '~/helpers/notifications';
 import { useTransactionStatus } from '~/hooks/polymesh';
 import { InstructionsContext } from '~/context/InstructionsContext';
 import { useWindowWidth } from '~/hooks/utility';
+import { AddressBookContext } from '~/context/AddressBookContext';
 
 interface ICreateEntityProps {
   toggleModal: () => void | React.ReactEventHandler | React.ChangeEventHandler;
@@ -31,11 +32,11 @@ export const CreateEntity: React.FC<ICreateEntityProps> = ({ toggleModal }) => {
   const {
     api: { sdk },
   } = useContext(PolymeshContext);
-  const { refreshInstructions } = useContext(InstructionsContext);
-  const { handleStatusChange } = useTransactionStatus();
+  // const { refreshInstructions } = useContext(InstructionsContext);
+  // const { handleStatusChange } = useTransactionStatus();
   const { isMobile } = useWindowWidth();
-
-  const onSubmit = async ({ description, type }: IFieldValues) => {
+  const { addDidEntity } = useContext(AddressBookContext);
+  const onSubmit = async ({ name, address, did}: IFieldValues) => {
     if (!sdk) return;
 
     let unsubCb: UnsubCallback | undefined;
@@ -43,6 +44,7 @@ export const CreateEntity: React.FC<ICreateEntityProps> = ({ toggleModal }) => {
     reset();
     toggleModal();
     try {
+      await addDidEntity({ name, address, did});
       // const venueQ = await sdk.settlements.createEntity({ description, type });
       // venueQ.onStatusChange(handleStatusChange);
       // await venueQ.run();
@@ -62,23 +64,32 @@ export const CreateEntity: React.FC<ICreateEntityProps> = ({ toggleModal }) => {
         Create New Entity
       </Heading>
       <InputWrapper $marginBottom={24}>
-        <StyledLabel htmlFor="description">Description</StyledLabel>
-        <StyledInput id="description" {...register('description')} />
-        {!!errors?.description?.message && (
+        <StyledLabel htmlFor="name">Tag name</StyledLabel>
+        <StyledInput id="name" {...register('name')} />
+        {!!errors?.name?.message && (
           <StyledErrorMessage>
-            {errors?.description?.message as string}
+            {errors?.name?.message as string}
           </StyledErrorMessage>
         )}
       </InputWrapper>
-      <DropdownSelect
-        label="Type"
-        placeholder="Select type"
-        options={Object.values(EAddressBookEntityTypes)}
-        onChange={(value) =>
-          setValue('type', value as EAddressBookEntityTypes, { shouldValidate: true })
-        }
-        error={errors?.type?.message}
-      />
+      <InputWrapper $marginBottom={24}>
+        <StyledLabel htmlFor="did">DID</StyledLabel>
+        <StyledInput id="did" {...register('did')} />
+        {!!errors?.did?.message && (
+          <StyledErrorMessage>
+            {errors?.did?.message as string}
+          </StyledErrorMessage>
+        )}
+      </InputWrapper>
+      <InputWrapper $marginBottom={24}>
+        <StyledLabel htmlFor="address">Address</StyledLabel>
+        <StyledInput id="address" {...register('address')} />
+        {!!errors?.address?.message && (
+          <StyledErrorMessage>
+            {errors?.address?.message as string}
+          </StyledErrorMessage>
+        )}
+      </InputWrapper>
       <StyledButtonsWrapper>
         {!isMobile && (
           <Button variant="modalSecondary" onClick={toggleModal}>
