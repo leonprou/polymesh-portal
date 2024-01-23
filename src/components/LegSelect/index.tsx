@@ -1,10 +1,11 @@
-import { useState, useMemo, useContext } from 'react';
+import { useState, useRef, useEffect, useContext } from 'react';
 import {
   FungibleAsset,
   Identity,
 } from '@polymeshassociation/polymesh-sdk/types';
-import { DropdownSelect, SkeletonLoader } from '~/components/UiKit';
-import { TSelectedAsset } from '~/components/AssetForm/constants';
+import { BigNumber } from '@polymeshassociation/polymesh-sdk';
+import { Icon } from '~/components';
+import { DropdownSelect, SkeletonLoader, Text } from '~/components/UiKit';
 import {
   InputWrapper,
   StyledLabel,
@@ -64,6 +65,17 @@ const LegSelect: React.FC<ILegSelectProps> = ({
     sender: false,
     receiver: false,
   });
+  const [selectedAsset, setSelectedAsset] = useState<FungibleAsset | null>(
+    null,
+  );
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [initialFreeBalance, setInitialFreeBalance] = useState(0);
+  const [selectedAmount, setSelectedAmount] = useState('');
+  const [validationError, setValidationError] = useState('');
+  const [assetSelectExpanded, setAssetSelectExpanded] = useState(false);
+  const [selectedAssetIsDivisible, setSelectedAssetIsDivisible] =
+    useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   const {
     assets = [],
@@ -156,6 +168,53 @@ const LegSelect: React.FC<ILegSelectProps> = ({
     }
   };
 
+  const validateInput = (inputValue: string) => {
+    if (!selectedSenderPortfolio) return;
+
+    const amount = Number(inputValue);
+    let error = '';
+
+    if (Number.isNaN(amount)) {
+      error = 'Amount must be a number';
+    } else if (!inputValue) {
+      error = 'Amount is required';
+    } else if (amount <= 0) {
+      error = 'Amount must be greater than zero';
+    } else if (
+      validateTotalSelected({
+        asset: selectedAsset as FungibleAsset,
+        selectedLegs,
+        sender: selectedSenderPortfolio.portfolio.toHuman().did,
+        portfolioId: selectedSenderPortfolio.id,
+        inputValue,
+        initialFreeBalance,
+        index,
+      })
+    ) {
+      error = 'Insufficient balance';
+    } else if (!selectedAssetIsDivisible && inputValue.indexOf('.') !== -1) {
+      error = 'Asset does not allow decimal places';
+    } else if (
+      inputValue.indexOf('.') !== -1 &&
+      inputValue.substring(inputValue.indexOf('.') + 1).length > 6
+    ) {
+      error = 'Amount must have at most 6 decimal places';
+    }
+
+    setValidationError(error);
+
+    handleAdd({
+      asset: (selectedAsset as FungibleAsset).toHuman(),
+      amount: error ? 0 : amount,
+      index,
+      from: (selectedSenderPortfolio as IPortfolioData).portfolio,
+      to: (selectedReceiverPortfolio as IPortfolioData).portfolio,
+    });
+  };
+
+  const toggleAssetSelectDropdown = () =>
+    setAssetSelectExpanded((prev) => !prev);
+
   const handlePortfolioSelect = (
     combinedId: string,
     role: 'sender' | 'receiver',
@@ -193,10 +252,7 @@ const LegSelect: React.FC<ILegSelectProps> = ({
     }
   };
 
-  const handleAddAsset = (
-    selectedIndex: string,
-    item?: Partial<TSelectedAsset>,
-  ) => {
+  const handleAssetSelect = (asset: FungibleAsset, balance: BigNumber) => {
     if (!selectedSenderPortfolio || !selectedReceiverPortfolio) return;
     handleSelectAsset(selectedIndex, item);
     handleAdd(Number(selectedIndex), {

@@ -66,7 +66,7 @@ export const getTotalSelectedInSamePortfolio = ({
   assetIndex,
 }: {
   asset: FungibleAsset;
-  selectedLegs: TSelectedLeg[];
+  selectedLegs: ISelectedLeg[];
   sender: string;
   portfolioId: string | undefined;
   assetIndex: number;
@@ -129,4 +129,53 @@ export const checkAvailableBalance = ({
   });
 
   return freeBalance - totalSelectedInSamePortfolio;
+};
+
+export const validateTotalSelected = ({
+  asset,
+  selectedLegs,
+  sender,
+  portfolioId,
+  inputValue,
+  initialFreeBalance,
+  index,
+}: {
+  asset: FungibleAsset;
+  selectedLegs: ISelectedLeg[];
+  sender: string;
+  portfolioId: string | undefined;
+  inputValue: string;
+  initialFreeBalance: number;
+  index: number;
+}) => {
+  const totalSameAssetsWithOtherIndexes = selectedLegs.filter((leg) => {
+    return (
+      leg.index !== index &&
+      leg.asset === asset.toHuman() &&
+      (leg.from as DefaultPortfolio | NumberedPortfolio).toHuman().did ===
+        sender
+    );
+  });
+  const totalAmountExceptCurrentIndex = totalSameAssetsWithOtherIndexes.reduce(
+    (acc, { from, amount }) => {
+      if (
+        from instanceof DefaultPortfolioInstance &&
+        portfolioId === 'default'
+      ) {
+        return acc + amount;
+      }
+      if (
+        from instanceof NumberedPortfolioInstance &&
+        from.toHuman().id === portfolioId
+      ) {
+        return acc + amount;
+      }
+      return acc;
+    },
+    0,
+  );
+
+  return (
+    totalAmountExceptCurrentIndex + Number(inputValue) > initialFreeBalance
+  );
 };

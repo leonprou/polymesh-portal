@@ -1,112 +1,58 @@
 import { useState, useRef, useEffect } from 'react';
 import { FungibleAsset } from '@polymeshassociation/polymesh-sdk/types';
 import { BigNumber } from '@polymeshassociation/polymesh-sdk';
-import {
-  FungibleAsset,
-  PortfolioBalance,
-} from '@polymeshassociation/polymesh-sdk/types';
-import { formatBalance, stringToColor } from '~/helpers/formatters';
+import { IPortfolioData } from '~/context/PortfolioContext/constants';
 import { Icon } from '~/components';
 import { Text } from '~/components/UiKit';
-import { useOutsideClick } from '../../hooks';
-import { TSelectedAsset } from '../../constants';
-import { validateAssetInputField } from './helpers';
-import {
-  SelectWrapper,
-  StyledSelect,
-  StyledExpandedSelect,
-  SelectedOption,
-  StyledSelectOption,
-  StyledPlaceholder,
-  StyledError,
-} from '../../styles';
 import {
   StyledAmountInput,
   InputWrapper,
+  StyledAssetSelect,
+  StyledPlaceholder,
+  StyledWrapper,
   AssetWrapper,
+  AssetSelectWrapper,
+  StyledExpandedSelect,
+  StyledSelectOption,
   IconWrapper,
+  SelectedOption,
   StyledAvailableBalance,
+  StyledError,
+  CloseButton,
   UseMaxButton,
+  StyledMemoLabel,
+  StyledInput,
 } from './styles';
+import { formatBalance, stringToColor } from '~/helpers/formatters';
+import { ISelectedAsset } from '../../types';
 
 interface IAssetSelectProps {
-  index: string;
-  handleSelectAsset: (index: string, item?: Partial<TSelectedAsset>) => void;
-  assets: PortfolioBalance[];
-  assetBalance: number;
-  portfolioName: string;
-  disabled?: boolean;
+  portfolio: IPortfolioData;
+  index: number;
+  handleAdd: (item: ISelectedAsset) => void;
+  handleDelete: (index: number) => void;
+  selectedAssets: ISelectedAsset[];
 }
 
 export const AssetSelect: React.FC<IAssetSelectProps> = ({
+  portfolio,
   index,
-  assets,
-  assetBalance,
-  portfolioName,
-  handleSelectAsset,
-  disabled,
+  handleAdd,
+  handleDelete,
+  selectedAssets,
 }) => {
   const [selectedAsset, setSelectedAsset] = useState<FungibleAsset | null>(
     null,
   );
-<<<<<<< HEAD:src/components/AssetForm/components/AssetSelect/index.tsx
-=======
   const [availableBalance, setAvailableBalance] = useState(0);
->>>>>>> bb3d615 (Change Asset to FungibleAsset):src/components/AssetSelect/index.tsx
   const [selectedAmount, setSelectedAmount] = useState('');
   const [validationError, setValidationError] = useState('');
+  const [memo, setMemo] = useState('');
+  const [memoExpanded, setMemoExpanded] = useState(false);
   const [assetSelectExpanded, setAssetSelectExpanded] = useState(false);
   const [selectedAssetIsDivisible, setSelectedAssetIsDivisible] =
     useState(false);
-  const portfolioRef = useRef<string | undefined>(undefined);
-  const ref = useOutsideClick(() => setAssetSelectExpanded(false));
-
-  const validateInput = (inputValue: string) => {
-    const amount = Number(inputValue);
-
-    const error = validateAssetInputField(
-      inputValue,
-      assetBalance,
-      selectedAssetIsDivisible,
-    );
-    setValidationError(error);
-    handleSelectAsset(index, {
-      asset: selectedAsset?.ticker,
-      amount: new BigNumber(error ? 0 : amount),
-    });
-  };
-
-  const toggleAssetSelectDropdown = () => {
-    if (disabled) return;
-    setAssetSelectExpanded((prev) => !prev);
-  };
-
-  const handleAssetSelect = (asset: FungibleAsset) => {
-    setSelectedAsset(asset);
-    setSelectedAmount('');
-    handleSelectAsset(index, {
-      asset: asset.toHuman(),
-      amount: new BigNumber(0),
-    });
-    toggleAssetSelectDropdown();
-  };
-
-  const handleAmountChange: React.ChangeEventHandler<HTMLInputElement> = ({
-    target,
-  }) => {
-    setSelectedAmount(target.value);
-    validateInput(target.value);
-  };
-
-  const handleUseMax = () => {
-    setSelectedAmount(assetBalance.toString());
-    validateInput(assetBalance.toString());
-  };
-
-  const getAvailableBalance = () =>
-    Number(selectedAmount) > assetBalance
-      ? assetBalance
-      : assetBalance - Number(selectedAmount);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!selectedAsset) return;
@@ -120,13 +66,37 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
   }, [selectedAsset]);
 
   useEffect(() => {
-    if (portfolioRef.current !== portfolioName) {
-      if (selectedAmount) {
-        // reset amount if portfolio changed (advanced transfer)
-        handleSelectAsset(index);
+    const handleClickOutside: EventListenerOrEventListenerObject = (event) => {
+      if (ref.current && !ref.current.contains(event.target as Node | null)) {
+        setAssetSelectExpanded(false);
       }
-      setSelectedAsset(null);
-      setSelectedAmount('');
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [ref]);
+
+  const validateInput = (inputValue: string, optionalMemo?: string) => {
+    const amount = Number(inputValue);
+    let error = '';
+
+    if (Number.isNaN(amount)) {
+      error = 'Amount must be a number';
+    } else if (!inputValue) {
+      error = 'Amount is required';
+    } else if (amount <= 0) {
+      error = 'Amount must be greater than zero';
+    } else if (amount > availableBalance) {
+      error = 'Insufficient balance';
+    } else if (!selectedAssetIsDivisible && inputValue.indexOf('.') !== -1) {
+      error = 'Asset does not allow decimal places';
+    } else if (
+      inputValue.indexOf('.') !== -1 &&
+      inputValue.substring(inputValue.indexOf('.') + 1).length > 6
+    ) {
+      error = 'Amount must have at most 6 decimal places';
     }
 
     setValidationError(error);
@@ -135,6 +105,7 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
       asset: (selectedAsset as FungibleAsset).toHuman(),
       amount: error ? 0 : amount,
       index,
+      memo: optionalMemo || memo,
     });
   };
 
@@ -145,6 +116,7 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
     setSelectedAsset(asset);
     setAvailableBalance(balance.toNumber());
     setSelectedAmount('');
+    setMemo('');
     handleAdd({ asset: asset.toHuman(), amount: 0, index });
     toggleAssetSelectDropdown();
   };
@@ -161,25 +133,36 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
     validateInput(availableBalance.toString());
   };
 
+  const handleMemoChange: React.ChangeEventHandler<HTMLInputElement> = ({
+    target,
+  }) => {
+    setMemo(target.value);
+    validateInput(selectedAmount, target.value);
+  };
+
   const filteredAssets = portfolio.assets.filter(
     ({ asset }) =>
       !selectedAssets.some((selected) => selected.asset === asset.toHuman()),
   );
 
   return (
-    <>
+    <StyledWrapper>
+      {!!index && (
+        <CloseButton onClick={() => handleDelete(index)}>
+          <Icon name="CloseIcon" size="16px" />
+        </CloseButton>
+      )}
       <AssetWrapper>
         <div>
           <Text size="medium" bold marginBottom={3}>
             Asset
           </Text>
-          <SelectWrapper ref={ref}>
-            <StyledSelect
+          <AssetSelectWrapper ref={ref}>
+            <StyledAssetSelect
               onClick={toggleAssetSelectDropdown}
-              $disabled={disabled}
               $expanded={assetSelectExpanded}
             >
-              {assets && selectedAsset ? (
+              {portfolio.assets.length && selectedAsset ? (
                 <SelectedOption>
                   <IconWrapper
                     $background={stringToColor(selectedAsset.toHuman())}
@@ -192,14 +175,14 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
                 <StyledPlaceholder>Select Asset</StyledPlaceholder>
               )}
               <Icon name="ExpandIcon" className="expand-icon" size="18px" />
-            </StyledSelect>
+            </StyledAssetSelect>
             {assetSelectExpanded && (
               <StyledExpandedSelect>
-                {assets?.length ? (
-                  assets.map(({ asset }) => (
+                {portfolio.assets.length && !!filteredAssets.length ? (
+                  filteredAssets.map(({ asset, free }) => (
                     <StyledSelectOption
                       key={asset.toHuman()}
-                      onClick={() => handleAssetSelect(asset)}
+                      onClick={() => handleAssetSelect(asset, free)}
                     >
                       <IconWrapper $background={stringToColor(asset.toHuman())}>
                         <Icon name="Coins" size="16px" />
@@ -212,7 +195,7 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
                 )}
               </StyledExpandedSelect>
             )}
-          </SelectWrapper>
+          </AssetSelectWrapper>
         </div>
         <div>
           <Text size="medium" bold marginBottom={3}>
@@ -224,21 +207,39 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
               placeholder="Enter Amount"
               value={selectedAmount}
               onChange={handleAmountChange}
-              disabled={!selectedAsset}
+              disabled={!selectedAsset || !availableBalance}
             />
-            {!!assetBalance && (
+            {!!availableBalance && (
               <UseMaxButton onClick={handleUseMax}>Use max</UseMaxButton>
             )}
           </InputWrapper>
         </div>
       </AssetWrapper>
       {!!validationError && <StyledError>{validationError}</StyledError>}
-      {!!selectedAsset && (
+      {!!portfolio.assets.length && !!selectedAsset && (
         <StyledAvailableBalance>
           <Text>Available balance:</Text>
-          <Text>{formatBalance(getAvailableBalance())}</Text>
+          <Text>{formatBalance(availableBalance)}</Text>
         </StyledAvailableBalance>
       )}
-    </>
+      <StyledMemoLabel
+        onClick={() => setMemoExpanded((prev) => !prev)}
+        $expanded={memoExpanded}
+      >
+        <Text size="medium" bold>
+          Memo (Optional - this will be public)
+        </Text>
+        <Icon name="ExpandIcon" className="icon" size="18px" />
+      </StyledMemoLabel>
+      {memoExpanded && (
+        <StyledInput
+          type="text"
+          value={memo}
+          onChange={handleMemoChange}
+          placeholder="Enter movement memo"
+          maxLength={32}
+        />
+      )}
+    </StyledWrapper>
   );
 };
