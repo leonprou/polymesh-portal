@@ -17,6 +17,8 @@ import { ROUTES } from '~/constants/routes';
 import { theme, GlobalStyle } from '~/styles/theme';
 import { LoadingFallback } from '~/components';
 import { StakingProvider } from './context/StakingContext';
+import AddressBook from './layouts/AddressBook';
+import { AddressBookProvider } from './context/AddressBookContext';
 
 const SharedLayout = lazy(() => import('~/layouts/SharedLayout'));
 
@@ -70,19 +72,19 @@ const WrappedApp = () => {
         <PortfolioProvider>
           <AuthorizationsProvider>
             <InstructionsProvider>
-              <MultiSigProvider>
-                <ClaimsProvider>
-                  <DistributionsProvider>
-                    <StakingProvider>
+              <ClaimsProvider>
+                <DistributionsProvider>
+                  <StakingProvider>
+                    <AddressBookProvider>
                       <AppThemeProvider>
                         <BrowserRouter>
                           <App />
                         </BrowserRouter>
                       </AppThemeProvider>
+                      </AddressBookProvider>
                     </StakingProvider>
-                  </DistributionsProvider>
-                </ClaimsProvider>
-              </MultiSigProvider>
+                </DistributionsProvider>
+              </ClaimsProvider>
             </InstructionsProvider>
           </AuthorizationsProvider>
         </PortfolioProvider>

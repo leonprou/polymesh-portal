@@ -14,6 +14,7 @@ import { transferEventsQuery } from '~/helpers/graphqlQueries';
 import { notifyError } from '~/helpers/notifications';
 import { ITransferQueryResponse } from '~/constants/queries/types';
 import { PolymeshContext } from '~/context/PolymeshContext';
+import { AddressBookContext } from '~/context/AddressBookContext';
 
 
 export const useAddressBookTable = () => {
@@ -32,6 +33,8 @@ export const useAddressBookTable = () => {
   const [tableLoading, setTableLoading] = useState(false);
   const identityRef = useRef<string | undefined>('');
 
+  const { didEntities } = useContext(AddressBookContext);
+  console.log('didEntities', didEntities);
   // Reset page index when identity changes
   useEffect(() => {
     if (identity?.did !== identityRef.current) {
@@ -61,12 +64,12 @@ export const useAddressBookTable = () => {
         //   data.distributionPayments.nodes,
         // );
 
-        const parsedData = [
-          {name: 'leon', address: '5DPyj8QYwYv6cxZEvVk9XXuvNMBoSkH4o2xMSg97FjAtxFy6', did: '0x3c47d8ebf615e0c1bf915fc11c40e1995bfdf66b3e3b027d9b3c83cb38dc9f44'},
-          {name: 'FOB', address: '5GGt93unRxqBNNbpc8LkV2ZZv9oFWBfQFhfyyRa5A4NAbwym', did: '0x0eeedd3242dcbfaa6d5c76f84527fde116355b3f3b46185c423f2de26eb6871a'}
-        ]
+        // const parsedData = [
+        //   {name: 'leon', address: '5DPyj8QYwYv6cxZEvVk9XXuvNMBoSkH4o2xMSg97FjAtxFy6', did: '0x3c47d8ebf615e0c1bf915fc11c40e1995bfdf66b3e3b027d9b3c83cb38dc9f44'},
+        //   {name: 'FOB', address: '5GGt93unRxqBNNbpc8LkV2ZZv9oFWBfQFhfyyRa5A4NAbwym', did: '0x0eeedd3242dcbfaa6d5c76f84527fde116355b3f3b46185c423f2de26eb6871a'}
+        // ]
 
-        setTableData(parsedData);
+        setTableData(didEntities);
         setTotalItems(1);
         setTotalPages(
           1,
