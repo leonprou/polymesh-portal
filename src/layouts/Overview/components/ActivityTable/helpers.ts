@@ -1,7 +1,8 @@
 import { ExtrinsicData } from '@polymeshassociation/polymesh-sdk/types';
-import { IAssetTransaction } from '~/constants/queries/types';
+import { balanceToBigNumber } from '@polymeshassociation/polymesh-sdk/utils/conversion';
+import { ITransferEvent, IAddress } from '~/constants/queries/types';
 import { toParsedDateTime } from '~/helpers/dateTime';
-import { splitCamelCase } from '~/helpers/formatters';
+import { splitByCapitalLetters } from '~/helpers/formatters';
 import { IHistoricalItem, ITokenItem } from './constants';
 
 export const parseExtrinsicHistory = async (

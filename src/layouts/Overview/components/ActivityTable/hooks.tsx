@@ -9,12 +9,7 @@ import {
 import { ExtrinsicsOrderBy } from '@polymeshassociation/polymesh-sdk/types';
 import { BigNumber } from '@polymeshassociation/polymesh-sdk';
 import { AccountContext } from '~/context/AccountContext';
-import {
-  EActivityTableTabs,
-  IHistoricalItem,
-  ITokenItem,
-  INftTransactionItem,
-} from './constants';
+import { EActivityTableTabs, IHistoricalItem, ITokenItem } from './constants';
 import { columns } from './config';
 import { parseExtrinsicHistory, parseTokenActivity } from './helpers';
 import { transferEventsQuery } from '~/helpers/graphqlQueries';
