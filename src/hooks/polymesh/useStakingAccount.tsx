@@ -5,7 +5,7 @@ import {
   u32ToBigNumber,
 } from '@polymeshassociation/polymesh-sdk/utils/conversion';
 import type { AccountId32 } from '@polkadot/types/interfaces';
-import type { Vec, u32, Compact, u128, Struct } from '@polkadot/types-codec';
+import type { Vec, u32 } from '@polkadot/types-codec';
 import { PalletStakingUnlockChunk } from '@polymeshassociation/polymesh-sdk/polkadot/types-lookup';
 import { PolymeshContext } from '~/context/PolymeshContext';
 import { notifyError } from '~/helpers/notifications';
@@ -108,19 +108,17 @@ const useStakingAccount = () => {
     }
   }, [selectedAccount]);
 
-  useEffect(() => {
-    if (!polkadotApi || !currentEraIndex) {
-      return;
-    }
-    setAccountInfoLoading(true);
-
-    const processUnlockingDetails = (
+  const processUnlockingDetails = useCallback(
+    (
       unlockingDetails: Vec<PalletStakingUnlockChunk>,
-    ): [
-      BigNumber,
-      BigNumber,
-      { amount: BigNumber; era: BigNumber; id: string }[],
-    ] => {
+    ):
+      | [
+          BigNumber,
+          BigNumber,
+          { amount: BigNumber; era: BigNumber; id: string }[],
+        ]
+      | [] => {
+      if (!currentEraIndex) return [];
       let totalUnlockingBalance = new BigNumber(0);
       let totalWithdrawableBalance = new BigNumber(0);
       const unlockingLots: { amount: BigNumber; era: BigNumber; id: string }[] =
@@ -171,13 +169,9 @@ const useStakingAccount = () => {
         isStash: stash.toString() === selectedAccount,
         totalBonded: balanceToBigNumber(total.unwrap()),
         amountActive: balanceToBigNumber(active.unwrap()),
-<<<<<<< HEAD
         amountUnbonding: totalUnlockingBalance?.minus(
           totalWithdrawableBalance as BigNumber,
         ),
-=======
-        amountUnbonding: totalUnlockingBalance.minus(totalWithdrawableBalance),
->>>>>>> dcac3d8 (some staking type fixes)
         unlockingLots,
         rewardDestination: payee,
         amountAvailableToWithdraw: totalWithdrawableBalance,
@@ -186,18 +180,23 @@ const useStakingAccount = () => {
     [polkadotApi, processUnlockingDetails, selectedAccount],
   );
 
-    const fetchData = async () => {
-      try {
-        let stakingDetails: StakingDetails | null =
-          await getStakingDetails(selectedAccount);
+  const fetchData = useCallback(async () => {
+    try {
+      if (!polkadotApi) return;
 
-        if (!stakingDetails) {
-          const controller =
-            await polkadotApi.query.staking.bonded(selectedAccount);
-          if (controller.isSome) {
-            const controllerKey = controller.unwrap().toString();
-            stakingDetails = await getStakingDetails(controllerKey);
-          }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      let stakingDetails: StakingDetails | null =
+        await getStakingDetails(selectedAccount);
+
+      if (!stakingDetails) {
+        const controller =
+          await polkadotApi.query.staking.bonded(selectedAccount);
+        if (controller.isSome) {
+          const controllerKey = controller.unwrap().toString();
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          stakingDetails = await getStakingDetails(controllerKey);
         }
       }
 
@@ -326,65 +325,6 @@ const useStakingAccount = () => {
       setActivelyStakedOperators([]);
       return;
     }
-
-    const getActiveNominations = async (nominated: string[]) => {
-      const nominatedOperatorsPromises = nominated.map(
-        async (operatorAccount) => {
-          const stakersClipped =
-            await polkadotApi.query.staking.erasStakersClipped(
-              activeEraIndex.toNumber(),
-              operatorAccount,
-            );
-          return { operatorAccount, stakersClipped };
-        },
-      );
-
-      const nominatedStakers: {
-        operatorAccount: string;
-        stakersClipped: PalletStakingExposure;
-      }[] = await Promise.all(nominatedOperatorsPromises);
-      // We only want the operators we are actively staking with in the active era
-      const backedOperators: Array<{
-        operatorAccount: string;
-        value: BigNumber;
-      }> = [];
-
-      nominatedStakers.forEach(({ operatorAccount, stakersClipped }) => {
-        stakersClipped.others.forEach((entry) => {
-          if (entry.who.toString() === stashAddress) {
-            const value = balanceToBigNumber(entry.value.unwrap());
-            backedOperators.push({ operatorAccount, value });
-          }
-        });
-      });
-      setActivelyStakedOperators(backedOperators);
-    };
-
-    const getNominations = async () => {
-      try {
-        const nominatedAccounts =
-          await polkadotApi.query.staking.nominators(stashAddress);
-        if (nominatedAccounts.isNone) {
-          setNominations([]);
-          setNominatedEra(null);
-          setActivelyStakedOperators([]);
-          return;
-        }
-        const {
-          targets,
-          submittedIn,
-        }: { targets: Vec<AccountId32>; submittedIn: u32 } =
-          nominatedAccounts.unwrap();
-        const nominated = targets.map((target) => target.toString());
-        setNominations(nominated);
-        setNominatedEra(u32ToBigNumber(submittedIn));
-        await getActiveNominations(nominated);
-      } catch (error) {
-        notifyError((error as Error).message);
-      } finally {
-        setStakingAccountIsLoading(false);
-      }
-    };
 
     getNominations();
   }, [

@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
-import { FungibleAsset } from '@polymeshassociation/polymesh-sdk/types';
+import { useState, useEffect, useRef } from 'react';
 import { BigNumber } from '@polymeshassociation/polymesh-sdk';
 import {
   FungibleAsset,
@@ -49,10 +48,6 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
   const [selectedAsset, setSelectedAsset] = useState<FungibleAsset | null>(
     null,
   );
-<<<<<<< HEAD:src/components/AssetForm/components/AssetSelect/index.tsx
-=======
-  const [availableBalance, setAvailableBalance] = useState(0);
->>>>>>> bb3d615 (Change Asset to FungibleAsset):src/components/AssetSelect/index.tsx
   const [selectedAmount, setSelectedAmount] = useState('');
   const [validationError, setValidationError] = useState('');
   const [assetSelectExpanded, setAssetSelectExpanded] = useState(false);
@@ -128,43 +123,8 @@ export const AssetSelect: React.FC<IAssetSelectProps> = ({
       setSelectedAsset(null);
       setSelectedAmount('');
     }
-
-    setValidationError(error);
-
-    handleAdd({
-      asset: (selectedAsset as FungibleAsset).toHuman(),
-      amount: error ? 0 : amount,
-      index,
-    });
-  };
-
-  const toggleAssetSelectDropdown = () =>
-    setAssetSelectExpanded((prev) => !prev);
-
-  const handleAssetSelect = (asset: FungibleAsset, balance: BigNumber) => {
-    setSelectedAsset(asset);
-    setAvailableBalance(balance.toNumber());
-    setSelectedAmount('');
-    handleAdd({ asset: asset.toHuman(), amount: 0, index });
-    toggleAssetSelectDropdown();
-  };
-
-  const handleAmountChange: React.ChangeEventHandler<HTMLInputElement> = ({
-    target,
-  }) => {
-    setSelectedAmount(target.value);
-    validateInput(target.value);
-  };
-
-  const handleUseMax = () => {
-    setSelectedAmount(availableBalance.toString());
-    validateInput(availableBalance.toString());
-  };
-
-  const filteredAssets = portfolio.assets.filter(
-    ({ asset }) =>
-      !selectedAssets.some((selected) => selected.asset === asset.toHuman()),
-  );
+    portfolioRef.current = portfolioName;
+  }, [handleSelectAsset, index, portfolioName, selectedAmount]);
 
   return (
     <>
