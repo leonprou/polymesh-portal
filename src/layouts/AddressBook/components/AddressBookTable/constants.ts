@@ -32,6 +32,10 @@ export const TOKEN_COLUMNS = [
 
 export const ADDRESS_BOOK_COLUMNS = [
   {
+    header: '',
+    accessor: 'selected',
+  },
+  {
     header: 'Name',
     accessor: 'name',
   },
@@ -62,6 +66,7 @@ export interface ITokenItem {
 }
 
 export interface IAddressBookItem {
+  selected: boolean;
   name: string;
   address: string;
   did: string;

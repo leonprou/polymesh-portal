@@ -6,21 +6,14 @@ import {
   ColumnDef,
   PaginationState,
 } from '@tanstack/react-table';
-import { AccountContext } from '~/context/AccountContext';
-import { EActivityTableTabs, IHistoricalItem, ITokenItem, IAddressBookItem, AddressBookTableTabs } from './constants';
+// import { AccountContext } from '~/context/AccountContext';
+import { IAddressBookItem } from './constants';
 import { columns } from './config';
-import { parseExtrinsicHistory, parseTokenActivity } from './helpers';
-import { transferEventsQuery } from '~/helpers/graphqlQueries';
 import { notifyError } from '~/helpers/notifications';
-import { ITransferQueryResponse } from '~/constants/queries/types';
-import { PolymeshContext } from '~/context/PolymeshContext';
 import { AddressBookContext } from '~/context/AddressBookContext';
 
 
 export const useAddressBookTable = () => {
-  // const {
-  //   api: { gqlClient },
-  // } = useContext(PolymeshContext);
   const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -28,32 +21,35 @@ export const useAddressBookTable = () => {
   const [totalPages, setTotalPages] = useState(-1);
   const [totalItems, setTotalItems] = useState(0);
   const [tableData, setTableData] = useState<IAddressBookItem[]>([]);
-  const { identity, identityLoading } = useContext(AccountContext);
+  // const { identity, identityLoading } = useContext(AccountContext);
 
+  const [rowSelection, setRowSelection] = useState({})
   const [tableLoading, setTableLoading] = useState(false);
-  const identityRef = useRef<string | undefined>('');
+  // const identityRef = useRef<string | undefined>('');
 
   const { didEntities } = useContext(AddressBookContext);
-  console.log('didEntities', didEntities);
+  const initialTableData = didEntities.map((entity) => ({ ...entity, selected: false } as IAddressBookItem));
+  console.log({ initialTableData })
+  console.log()
   // Reset page index when identity changes
-  useEffect(() => {
-    if (identity?.did !== identityRef.current) {
-      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-    }
-  }, [identity]);
+  // useEffect(() => {
+  //   if (identity?.did !== identityRef.current) {
+  //     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  //   }
+  // }, [identity]);
 
   useEffect(() => {
-    if (!identity) {
-      setTableData([]);
-      identityRef.current = undefined;
-      return;
-    }
+    // if (!identity) {
+    //   setTableData([]);
+    //   identityRef.current = undefined;
+    //   return;
+    // }
 
     setTableLoading(true);
 
     (async () => {
       try {
-        setTableData(didEntities);
+        setTableData(initialTableData);
         setTotalItems(1);
         setTotalPages(
           1,
@@ -61,7 +57,7 @@ export const useAddressBookTable = () => {
       } catch (error) {
         notifyError((error as Error).message);
       } finally {
-        identityRef.current = identity.did;
+        // identityRef.current = identity.did;
         setTableLoading(false);
       }
     })();
@@ -79,17 +75,20 @@ export const useAddressBookTable = () => {
     table: useReactTable<IAddressBookItem>({
       data: tableData,
       columns: columns as ColumnDef<IAddressBookItem>[],
-      state: { pagination },
+      state: { pagination, rowSelection },
       manualPagination: true,
       pageCount: totalPages,
       onPaginationChange: setPagination,
       getCoreRowModel: getCoreRowModel(),
       getPaginationRowModel: getPaginationRowModel(),
+      onRowSelectionChange: setRowSelection,
       enableSorting: false,
+      enableRowSelection: true,
+      enableMultiRowSelection: false
     }),
     paginationState: pagination,
     tableLoading:
-      identityLoading || tableLoading || identity?.did !== identityRef.current,
+      tableLoading,
     totalItems,
   };
 };
